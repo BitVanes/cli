@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format check
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+      - name: Build
+        run: cargo build --release
+      - name: Smoke test
+        run: |
+          echo '# Test' > /tmp/test.md
+          echo 'Hello world.' >> /tmp/test.md
+          ./target/release/bitvanes --no-tui -i /tmp/test.md -f markdown -o /tmp/out.json
+          cat /tmp/out.json
