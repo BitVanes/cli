@@ -7,7 +7,7 @@
 mod headless;
 mod tui;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -61,6 +61,13 @@ fn main() -> ExitCode {
 
     // If --input is provided, run headless. Otherwise launch the TUI.
     if cli.input.is_some() || cli.no_tui {
+        if cli.input.is_none() {
+            // `--no-tui` without an input has nothing to do; show help
+            // instead of failing with a confusing "no input" error.
+            let _ = Cli::command().print_help();
+            println!();
+            return ExitCode::SUCCESS;
+        }
         match headless::run(&cli) {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {

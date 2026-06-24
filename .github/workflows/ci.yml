@@ -22,7 +22,23 @@ jobs:
         run: cargo build --release
       - name: Smoke test
         run: |
-          echo '# Test' > /tmp/test.md
-          echo 'Hello world.' >> /tmp/test.md
-          ./target/release/bitvanes --no-tui -i /tmp/test.md -f markdown -o /tmp/out.json
-          cat /tmp/out.json
+          set -e
+          BIN=./target/release/bitvanes
+          # --no-tui with no input prints help (and exits successfully).
+          $BIN --no-tui | head -1
+          # Markdown -> JSON / CSV / Arrow IPC
+          printf '# Hello\n\nThis is a test document.\n\nContact alice@example.com.\n' > /tmp/t.md
+          $BIN --no-tui -i /tmp/t.md -f markdown --scrub email -o /tmp/out.json
+          grep -q '"text"' /tmp/out.json
+          $BIN --no-tui -i /tmp/t.md -f markdown -o /tmp/out.csv
+          head -1 /tmp/out.csv | grep -q 'chunk_index'
+          $BIN --no-tui -i /tmp/t.md -f markdown -o /tmp/out.arrow
+          test -s /tmp/out.arrow
+          # JSON input
+          printf '{"name":"BitVanes","tags":["a","b"]}' > /tmp/t.json
+          $BIN --no-tui -i /tmp/t.json -o /tmp/outj.json
+          grep -q 'BitVanes' /tmp/outj.json
+          # Directory walk picks up all supported extensions
+          mkdir -p /tmp/docs && cp /tmp/t.md /tmp/docs/ && cp /tmp/t.json /tmp/docs/
+          $BIN --no-tui -i /tmp/docs/ -o /tmp/dir.json
+          grep -q '"chunk_index"' /tmp/dir.json

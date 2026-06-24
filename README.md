@@ -49,21 +49,30 @@ Run `bitvanes` with no arguments to launch the terminal UI:
 bitvanes
 ```
 
-Three screens:
+Four screens (press `?` anywhere for full keybinds):
 1. **File Browser** — navigate directories, select files with Space
 2. **Config** — adjust format, tokenizer, max tokens, PII patterns
-3. **Results** — scrollable chunk preview table with stats
+3. **Results** — scrollable chunk preview table with stats; save to a path
+4. **Help** — full keybind reference
 
 Keybinds:
-- `↑↓` / `jk` — navigate
+- `↑↓` / `jk` — navigate / scroll
 - `Enter` — open directory / toggle selection / process
 - `Space` — select file
-- `Tab` — switch between browser and config
+- `Tab` — cycle screens (Browser → Config → Results)
 - `m` — cycle max tokens (128 → 256 → 512 → 1024)
 - `t` — cycle tokenizer
-- `e/s/a` — toggle email/ssn/aws PII scrubbing
+- `e/s/a` — toggle email/ssn/aws PII scrubbing (Config screen)
+- `s` — **save** chunks to the output path (Results screen)
+- `e` — **edit** the output path; type a new name, `Enter` confirms, `Esc` cancels.
+  Output format is inferred from the extension: `.json` (default), `.csv`, `.arrow`
 - `b` — back to file browser
-- `q` — quit
+- `?` — toggle help
+- `q` / `Esc` — quit
+
+Processing runs on a background thread, so the UI stays responsive on large
+files (a spinner shows progress). CLI flags (`--format`, `--max-tokens`,
+`--tokenizer`, `--scrub`, `--config`) are honoured when launching the TUI.
 
 ### Profile replay (from web app)
 
@@ -90,7 +99,7 @@ Input:
       --no-tui               Headless mode
 
 Pipeline:
-  -f, --format <FORMAT>      markdown | text | html | pdf
+  -f, --format <FORMAT>      markdown | text | html | json | pdf (auto-detected)
   -t, --tokenizer <NAME>     cl100k_base | o200k_base | r50k_base | ...
   -m, --max-tokens <N>       Max tokens per chunk
       --scrub <PATTERNS>     Comma-separated PII patterns
@@ -114,9 +123,12 @@ Output:
 | Markdown | `.md` | `pulldown-cmark` |
 | Text | `.txt` | Paragraph-based splitting |
 | HTML | `.html` | `scraper` (html5ever) |
-| PDF | `.pdf` | `pdf-extract` (native, with `cli-pdf` feature) |
+| JSON | `.json` | Structural (one chunk per object/leaf) |
+| PDF | `.pdf` | `pdf-extract` (native, text-layer only) |
 
 Format is auto-detected from file extension. Override with `--format`.
+Scanned/image-only PDFs have no extractable text layer and are reported
+as invalid input (OCR is out of scope; the web app uses PDF.js).
 
 ## Features
 
@@ -138,7 +150,8 @@ cargo build --release
 ```
 
 The CLI depends on [`bitvanes-core`](https://github.com/BitVanes/core) via a
-git dependency (tag `v0.1.0`). No manual checkout of the core repo needed.
+git dependency (tag `v0.1.1`, with the `ipc`, `csv`, `cli-pdf`, and
+`parallel` features). No manual checkout of the core repo needed.
 
 ## License
 

@@ -86,7 +86,7 @@ pub fn run(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Builds a `PipelineConfig` from a profile JSON and/or CLI flags.
-fn build_config(cli: &Cli) -> Result<PipelineConfig, Box<dyn std::error::Error>> {
+pub(crate) fn build_config(cli: &Cli) -> Result<PipelineConfig, Box<dyn std::error::Error>> {
     let mut config = if let Some(path) = &cli.config {
         let json = fs::read_to_string(path)
             .map_err(|e| format!("could not read config {}: {e}", path.display()))?;
@@ -134,10 +134,10 @@ fn collect_files(
             DocumentFormat::Text => &["txt"],
             DocumentFormat::Html => &["html", "htm"],
             DocumentFormat::Pdf => &["pdf"],
-            _ => &["md", "markdown", "txt", "html", "htm", "pdf"],
+            DocumentFormat::Json => &["json"],
         }
     } else {
-        &["md", "markdown", "txt", "html", "htm", "pdf"]
+        &["md", "markdown", "txt", "html", "htm", "pdf", "json"]
     };
 
     let files: Vec<PathBuf> = WalkDir::new(input)
@@ -188,9 +188,9 @@ fn process_file(path: &Path, config: &PipelineConfig) -> Vec<ChunkSpec> {
     }
 }
 
-/// Overrides the format based on file extension if the config says something
-/// that doesn't match the file type.
-fn infer_format(path: &Path, mut cfg: PipelineConfig) -> PipelineConfig {
+/// Overrides the format based on file extension so each file is parsed by
+/// the parser matching its type, regardless of the configured default.
+pub(crate) fn infer_format(path: &Path, mut cfg: PipelineConfig) -> PipelineConfig {
     let ext = path
         .extension()
         .and_then(|e| e.to_str())
@@ -199,7 +199,9 @@ fn infer_format(path: &Path, mut cfg: PipelineConfig) -> PipelineConfig {
         Some("md") | Some("markdown") => cfg.format = DocumentFormat::Markdown,
         Some("txt") => cfg.format = DocumentFormat::Text,
         Some("html") | Some("htm") => cfg.format = DocumentFormat::Html,
-        _ => {} // keep the configured format
+        Some("pdf") => cfg.format = DocumentFormat::Pdf,
+        Some("json") => cfg.format = DocumentFormat::Json,
+        _ => {}
     }
     cfg
 }

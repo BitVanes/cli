@@ -34,7 +34,7 @@ Output formats: Arrow IPC, CSV, JSON (all from `bitvanes-core`'s `arrow_io`).
 ## Dependency on core
 
 ```toml
-bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.1.1", features = ["ipc", "csv"] }
+bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.1.1", features = ["ipc", "csv", "cli-pdf", "parallel"] }
 ```
 
 After bumping the core version, update the tag here and in Cargo.toml.
