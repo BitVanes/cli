@@ -37,7 +37,10 @@ Output formats: Arrow IPC, CSV, JSON (all from `bitvanes-core`'s `arrow_io`).
 bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.1.1", features = ["ipc", "csv", "cli-pdf", "parallel"] }
 ```
 
-After bumping the core version, update the tag here and in Cargo.toml.
+The CLI is distributed as a prebuilt binary via GitHub Releases (not published
+to crates.io), so it links core via a git tag. Only `bitvanes-core` is
+published to crates.io. To bump the core version, update the tag here and in
+Cargo.toml.
 
 ## Release
 

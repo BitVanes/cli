@@ -1,6 +1,6 @@
 [package]
 name = "bitvanes-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -9,6 +9,7 @@ repository = "https://github.com/BitVanes/cli"
 homepage = "https://bitvanes.com"
 keywords = ["etl", "rag", "ai", "chunking", "arrow"]
 categories = ["command-line-utilities", "text-processing"]
+readme = "README.md"
 
 [[bin]]
 name = "bitvanes"

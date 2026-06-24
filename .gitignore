@@ -12,3 +12,8 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Local run artifacts
+/output*.json
+/output*.csv
+/output*.arrow

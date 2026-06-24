@@ -300,3 +300,112 @@ impl From<&ChunkSpec> for JsonChunk {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bitvanes_core::SectionKind;
+
+    fn chunk(text: &str) -> ChunkSpec {
+        ChunkSpec {
+            chunk_index: 0,
+            text: text.to_string(),
+            token_count: 1,
+            source_path: "t.md".to_string(),
+            heading_path: vec![],
+            section_kind: SectionKind::Paragraph,
+            char_offset_start: 0,
+            char_offset_end: text.len() as u32,
+        }
+    }
+
+    #[test]
+    fn parse_format_recognizes_every_supported_format() {
+        assert_eq!(parse_format("markdown").unwrap(), DocumentFormat::Markdown);
+        assert_eq!(parse_format("md").unwrap(), DocumentFormat::Markdown);
+        assert_eq!(parse_format("text").unwrap(), DocumentFormat::Text);
+        assert_eq!(parse_format("HTML").unwrap(), DocumentFormat::Html);
+        assert_eq!(parse_format("json").unwrap(), DocumentFormat::Json);
+        assert_eq!(parse_format("pdf").unwrap(), DocumentFormat::Pdf);
+        assert!(parse_format("docx").is_err());
+    }
+
+    #[test]
+    fn parse_tokenizer_accepts_all_variants_case_insensitively() {
+        for s in ["cl100k_base", "O200K_BASE", "r50k_base"] {
+            assert!(parse_tokenizer(s).is_ok(), "{s} should parse");
+        }
+        assert!(parse_tokenizer("nope").is_err());
+    }
+
+    #[test]
+    fn parse_scrub_collects_known_patterns() {
+        let profile = parse_scrub("email,ssn, credit_card ,, unknown");
+        assert_eq!(profile.patterns.len(), 3);
+        assert!(profile.patterns.contains(&BuiltInPattern::Email));
+        assert!(profile.patterns.contains(&BuiltInPattern::CreditCard));
+        assert!(profile.custom.is_empty());
+    }
+
+    #[test]
+    fn infer_format_routes_by_extension() {
+        let base = PipelineConfig::default();
+        assert_eq!(
+            infer_format(std::path::Path::new("/x/a.md"), base.clone()).format,
+            DocumentFormat::Markdown
+        );
+        assert_eq!(
+            infer_format(std::path::Path::new("/x/a.json"), base.clone()).format,
+            DocumentFormat::Json
+        );
+        assert_eq!(
+            infer_format(std::path::Path::new("/x/a.pdf"), base.clone()).format,
+            DocumentFormat::Pdf
+        );
+        assert_eq!(
+            infer_format(std::path::Path::new("/x/a.htm"), base.clone()).format,
+            DocumentFormat::Html
+        );
+        // Unknown extension keeps the configured format.
+        assert_eq!(
+            infer_format(std::path::Path::new("/x/a.xyz"), base).format,
+            DocumentFormat::Markdown
+        );
+    }
+
+    #[test]
+    fn write_output_emits_all_three_formats() {
+        let id = nanos();
+        let chunks = vec![chunk("hello world")];
+
+        let json_path = format!("/tmp/bv-pub-{id}.json");
+        write_output(&chunks, &json_path).unwrap();
+        assert!(
+            std::fs::read_to_string(&json_path)
+                .unwrap()
+                .contains("hello world")
+        );
+
+        let csv_path = format!("/tmp/bv-pub-{id}.csv");
+        write_output(&chunks, &csv_path).unwrap();
+        let csv = std::fs::read_to_string(&csv_path).unwrap();
+        assert!(csv.lines().next().unwrap().contains("chunk_index"));
+        assert!(csv.contains("hello world"));
+
+        let arrow_path = format!("/tmp/bv-pub-{id}.arrow");
+        write_output(&chunks, &arrow_path).unwrap();
+        let bytes = std::fs::read(&arrow_path).unwrap();
+        // Arrow IPC stream begins with the continuation marker 0xFFFFFFFF.
+        assert_eq!(&bytes[..4], &[0xFF, 0xFF, 0xFF, 0xFF]);
+        let _ = std::fs::remove_file(&json_path);
+        let _ = std::fs::remove_file(&csv_path);
+        let _ = std::fs::remove_file(&arrow_path);
+    }
+
+    fn nanos() -> u128 {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    }
+}
