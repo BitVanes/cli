@@ -74,6 +74,39 @@ Processing runs on a background thread, so the UI stays responsive on large
 files (a spinner shows progress). CLI flags (`--format`, `--max-tokens`,
 `--tokenizer`, `--scrub`, `--config`) are honoured when launching the TUI.
 
+### Ingestion at scale
+
+The CLI is built for automated, team-scale ingestion:
+
+```bash
+# Glob instead of a single path
+bitvanes --no-tui --glob "docs/**/*.md" -o chunks.json
+
+# Idempotent incremental runs: skip files already in the manifest
+bitvanes --no-tui -i ./ingest/ --manifest .bitvanes-manifest.json -o chunks.json
+
+# Hot-folder daemon: keep watching for new/changed files and process them
+bitvanes --no-tui -i ./ingest/ --watch --manifest .bitvanes-manifest.json --poll-interval 10
+
+# Cap parallelism
+bitvanes --no-tui -i ./docs/ --jobs 4 -o chunks.json
+```
+
+JSON output carries dedup keys for downstream pipelines: `source_hash`
+(blake3 of the source file) and `chunk_hash` (blake3 of the chunk text).
+
+### On-device embeddings (optional)
+
+Build with the `embed` feature to enable `--embed`, which fills the Arrow
+`embedding` column with real vectors (requires glibc ≥ 2.38 to link ONNX
+Runtime, so it is off in the prebuilt release binaries):
+
+```bash
+cargo build --release --features embed
+bitvanes --no-tui -i ./docs/ --embed model.onnx --embed-tokenizer tokenizer.json \
+    --embed-dim 384 -o chunks.arrow
+```
+
 ### Profile replay (from web app)
 
 Export a profile from the BitVanes web app, then replay it identically:

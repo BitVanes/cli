@@ -34,13 +34,20 @@ Output formats: Arrow IPC, CSV, JSON (all from `bitvanes-core`'s `arrow_io`).
 ## Dependency on core
 
 ```toml
-bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.1.1", features = ["ipc", "csv", "cli-pdf", "parallel"] }
+bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.2.0", features = ["ipc", "csv", "cli-pdf", "parallel"] }
 ```
 
 The CLI is distributed as a prebuilt binary via GitHub Releases (not published
 to crates.io), so it links core via a git tag. Only `bitvanes-core` is
 published to crates.io. To bump the core version, update the tag here and in
 Cargo.toml.
+
+## Features
+
+`default = []`. The `embed` cargo feature enables `--embed` (on-device
+embeddings via ONNX Runtime). It is **off by default** because linking the
+prebuilt `ort` static lib needs glibc ≥ 2.38, which the Linux release runner
+(ubuntu-22.04) lacks; build locally with `cargo build --features embed`.
 
 ## Release
 
