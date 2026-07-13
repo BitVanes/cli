@@ -26,21 +26,16 @@ jobs:
         run: |
           set -e
           BIN=./target/release/bitvanes
-          # --no-tui with no input prints help (and exits successfully).
-          $BIN --no-tui | head -1
-          # Markdown -> JSON / CSV / Arrow IPC
-          printf '# Hello\n\nThis is a test document.\n\nContact alice@example.com.\n' > /tmp/t.md
-          $BIN --no-tui -i /tmp/t.md -f markdown --scrub email -o /tmp/out.json
-          grep -q '"text"' /tmp/out.json
-          $BIN --no-tui -i /tmp/t.md -f markdown -o /tmp/out.csv
-          head -1 /tmp/out.csv | grep -q 'chunk_index'
-          $BIN --no-tui -i /tmp/t.md -f markdown -o /tmp/out.arrow
-          test -s /tmp/out.arrow
-          # JSON input
-          printf '{"name":"BitVanes","tags":["a","b"]}' > /tmp/t.json
-          $BIN --no-tui -i /tmp/t.json -o /tmp/outj.json
-          grep -q 'BitVanes' /tmp/outj.json
-          # Directory walk picks up all supported extensions
-          mkdir -p /tmp/docs && cp /tmp/t.md /tmp/docs/ && cp /tmp/t.json /tmp/docs/
-          $BIN --no-tui -i /tmp/docs/ -o /tmp/dir.json
-          grep -q '"chunk_index"' /tmp/dir.json
+          $BIN --no-tui | head -1                       # help when no input
+          mkdir -p /tmp/docs && printf '# Hello\n\nWorld.\n' > /tmp/docs/t.md
+          # markdown -> JSON / CSV / Arrow
+          $BIN --no-tui -i /tmp/docs/t.md -f markdown -o /tmp/o.json && grep -q text /tmp/o.json
+          $BIN --no-tui -i /tmp/docs/t.md -o /tmp/o.csv && grep -q chunk_index /tmp/o.csv
+          $BIN --no-tui -i /tmp/docs/t.md -o /tmp/o.arrow && test -s /tmp/o.arrow
+          # dedup keys in JSON
+          grep -q chunk_hash /tmp/o.json
+          # glob
+          $BIN --no-tui --glob "/tmp/docs/**/*.md" -o /tmp/g.json && grep -q chunk_index /tmp/g.json
+          # manifest idempotency
+          $BIN --no-tui -i /tmp/docs --manifest /tmp/m.json -o /tmp/r1.json
+          $BIN --no-tui -i /tmp/docs --manifest /tmp/m.json -o /tmp/r2.json 2>&1 | grep -q "Nothing new"

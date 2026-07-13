@@ -446,10 +446,12 @@ fn run_pipeline_for_files(paths: &[PathBuf], base_config: &PipelineConfig) -> Pr
         };
         let cfg = crate::headless::infer_format(path, cfg);
 
-        match parse_bytes(&bytes, &cfg)
-            .and_then(|doc| scrub_document(doc, &cfg.scrub).map(|(d, _)| d))
-            .and_then(|doc| chunk_document(&doc, &cfg.chunk, cfg.source_label.as_deref()))
-        {
+        match parse_bytes(&bytes, &cfg).and_then(|doc| {
+            let (scrubbed, map, findings) = scrub_document(doc, &cfg.scrub)?;
+            let mut c = chunk_document(&scrubbed, &cfg.chunk, cfg.source_label.as_deref())?;
+            bitvanes_core::pipeline::attach_metadata(&mut c, &findings, &map);
+            Ok(c)
+        }) {
             Ok(c) => chunks.extend(c),
             Err(e) => error = Some(format!("failed {}: {e}", path.display())),
         }
@@ -533,6 +535,7 @@ mod tests {
         let mut app = AppState::new(&cli_with(&["--no-tui"]));
         app.chunks = vec![ChunkSpec {
             chunk_index: 0,
+            chunk_id: "test".to_string(),
             text: "sample".to_string(),
             token_count: 1,
             source_path: "t.md".to_string(),
@@ -540,6 +543,7 @@ mod tests {
             section_kind: bitvanes_core::SectionKind::Paragraph,
             char_offset_start: 0,
             char_offset_end: 6,
+            pii: vec![],
         }];
         let out = format!(
             "/tmp/bitvanes-save-{}.json",
