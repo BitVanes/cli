@@ -1,0 +1,8 @@
+# Local development override: use the path dependency instead of the git tag.
+# This file is gitignored — CI uses the git dependency from Cargo.toml.
+#
+# To use: uncomment the section below. Requires the core repo checked out
+# at ../core/ relative to this directory.
+#
+# [patch."https://github.com/BitVanes/core.git"]
+# bitvanes-core = { path = "../core/crates/core" }

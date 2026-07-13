@@ -19,7 +19,7 @@ Download the latest binary from
 
 ```bash
 # Linux/macOS
-curl -L https://github.com/BitVanes/cli/releases/latest/download/bitvanes-v0.1.0-x86_64-linux.tar.gz | tar xz
+curl -L https://github.com/BitVanes/cli/releases/latest/download/bitvanes-v0.4.0-x86_64-linux.tar.gz | tar xz
 sudo mv bitvanes /usr/local/bin/
 
 # Verify
