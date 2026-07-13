@@ -422,6 +422,7 @@ dependencies = [
 [[package]]
 name = "bitvanes-core"
 version = "0.4.0"
+source = "git+https://github.com/BitVanes/core.git?tag=v0.4.0#ffb491eb857eb424846ed986fdb98f3787c2b756"
 dependencies = [
  "arrow",
  "blake3",

@@ -23,7 +23,7 @@ default = []
 embed = ["bitvanes-core/embeddings"]
 
 [dependencies]
-bitvanes-core = { path = "../core/crates/core", features = ["ipc", "csv", "cli-pdf", "parallel", "office", "mmap"] }
+bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.4.0", features = ["ipc", "csv", "cli-pdf", "parallel", "office", "mmap"] }
 blake3 = "1"
 clap = { version = "4", features = ["derive"] }
 crossterm = "0.28"
