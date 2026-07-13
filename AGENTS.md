@@ -21,7 +21,7 @@ cat /tmp/out.json
 ## Architecture
 
 Headless CLI that links `bitvanes-core` via path dependency (local dev) or
-git tag `v0.3.0` (release).
+git tag `v0.4.0` (release).
 
 Entry point: `src/main.rs` (clap arg parsing → dispatch to headless or TUI).
 Headless: `src/headless.rs` (directory scan → rayon parallel → output).
@@ -36,7 +36,7 @@ Output formats: Arrow IPC, CSV, JSON (all from `bitvanes-core`'s `arrow_io`).
 
 ```toml
 bitvanes-core = { path = "../core/crates/core", features = ["ipc", "csv", "cli-pdf", "parallel"] }
-# For release: git = "https://github.com/BitVanes/core.git", tag = "v0.3.0"
+# For release: git = "https://github.com/BitVanes/core.git", tag = "v0.4.0"
 ```
 
 The CLI is distributed as a prebuilt binary via GitHub Releases (not published
@@ -54,8 +54,8 @@ prebuilt `ort` static lib needs glibc ≥ 2.38, which the Linux release runner
 ## Release
 
 ```bash
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.4.0
+git push origin v0.4.0
 ```
 
 The release workflow (.github/workflows/release.yml) builds binaries for:
