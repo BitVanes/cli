@@ -1,6 +1,6 @@
 [package]
 name = "bitvanes-cli"
-version = "0.2.0"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -23,17 +23,18 @@ default = []
 embed = ["bitvanes-core/embeddings"]
 
 [dependencies]
-bitvanes-core = { git = "https://github.com/BitVanes/core.git", tag = "v0.2.0", features = ["ipc", "csv", "cli-pdf", "parallel"] }
+bitvanes-core = { path = "../core/crates/core", features = ["ipc", "csv", "cli-pdf", "parallel", "office", "mmap"] }
 blake3 = "1"
 clap = { version = "4", features = ["derive"] }
 crossterm = "0.28"
 glob = "0.3"
+indicatif = "0.17"
 ratatui = "0.29"
 rayon = "1"
-walkdir = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-indicatif = "0.17"
+toml = "0.8"
+walkdir = "2"
 
 [profile.release]
 opt-level = 3

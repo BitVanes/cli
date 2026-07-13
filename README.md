@@ -136,6 +136,9 @@ Pipeline:
   -t, --tokenizer <NAME>     cl100k_base | o200k_base | r50k_base | ...
   -m, --max-tokens <N>       Max tokens per chunk
       --scrub <PATTERNS>     Comma-separated PII patterns
+      --min-confidence <F>   Min confidence [0.0–1.0] for scrubbing (default: 0.0)
+      --anchor-window <N>    Contextual anchor half-window in words (default: 7)
+      --toml <FILE>          bitvanes.toml config (layered below CLI flags)
 
 Output:
   -o, --output <FILE>        .arrow | .csv | .json | - (stdout)
@@ -158,19 +161,24 @@ Output:
 | HTML | `.html` | `scraper` (html5ever) |
 | JSON | `.json` | Structural (one chunk per object/leaf) |
 | PDF | `.pdf` | `pdf-extract` (native, text-layer only) |
+| **DOCX** | `.docx` | ZIP + quick-xml (headings, tables, lists) |
+| **PPTX** | `.pptx` | Slide-by-slide text extraction |
+| **XLSX** | `.xlsx` | `calamine` (memory-guarded for large sheets) |
+| **EPUB** | `.epub` | OPF spine + HtmlParser per chapter |
+| **RTF** | `.rtf` | `rtf-parser` |
 
 Format is auto-detected from file extension. Override with `--format`.
-Scanned/image-only PDFs have no extractable text layer and are reported
-as invalid input (OCR is out of scope; the web app uses PDF.js).
 
 ## Features
 
+- **10 document formats**: Markdown, Text, HTML, JSON, PDF, DOCX, PPTX, XLSX, EPUB, RTF
+- **8 PII patterns**: email, SSN, phone, credit card (Luhn), routing number
+  (ABA), AWS keys, GitHub PATs, JWTs — with confidence scoring + anchor windows
 - **6 OpenAI tokenizers**: cl100k_base, o200k_base, r50k_base, p50k_base,
   p50k_edit, o200k_harmony (all embedded at compile time)
-- **7 PII patterns**: email, SSN, phone, credit card (Luhn), AWS keys,
-  GitHub PATs, JWTs
-- **Structural context**: heading ancestry preserved per chunk
-- **Parallel processing**: rayon multi-core for directory batch processing
+- **Parallel processing**: rayon multi-core batch + intra-doc parallel regex
+- **Memory-mapped I/O**: zero-copy reads for files > 1 MB
+- **Streaming output**: Arrow IPC to stdout for pipe-friendly ETL
 - **Profile replay**: byte-for-byte identical output to the web app
 
 ## Build from source
@@ -183,8 +191,8 @@ cargo build --release
 ```
 
 The CLI depends on [`bitvanes-core`](https://github.com/BitVanes/core) via a
-git dependency (tag `v0.1.1`, with the `ipc`, `csv`, `cli-pdf`, and
-`parallel` features). No manual checkout of the core repo needed.
+git dependency (tag `v0.4.0`, with the `ipc`, `csv`, `cli-pdf`, `office`,
+`mmap`, and `parallel` features). No manual checkout of the core repo needed.
 
 ## License
 
